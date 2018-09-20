@@ -10,7 +10,6 @@ import random
 from amino_acids import aa, codons, aa_table   # you may find these useful
 from load import load_seq
 
-
 def shuffle_string(s):
     """Shuffles the characters in the input string
         NOTE: this is a helper function, you do not
@@ -18,10 +17,6 @@ def shuffle_string(s):
     return ''.join(random.sample(s, len(s)))
 
 # YOU WILL START YOUR IMPLEMENTATION FROM HERE DOWN ###
-
-
-
-
 def get_complement(nucleotide):
     """ Returns the complementary nucleotide
         nucleotide: a nucleotide (A, C, G, or T) represented as a string
@@ -56,16 +51,14 @@ def get_reverse_complement(dna):
     >>> get_reverse_complement("CCGCGTTCA")
     'TGAACGCGG'
     """
-    n = len(dna)
-    genelen = n
+    genelen = len(dna)
     backward = ""
-    while n > 0:
+    while genelen > 0:
         letter = dna[genelen -1]
         complement = get_complement(letter) #Build Complementary Strand
         backward = backward + complement #Add complement to reverse strand
-        n = n-1
-        return backward
-
+        genelen = genelen-1
+    return backward
 
 def rest_of_ORF(dna):
     """ Takes a DNA sequence that is assumed to begin with a start
@@ -92,9 +85,6 @@ def rest_of_ORF(dna):
             Strand = Strand + codon
             n = n + 3 #Move forward 3
     return Strand
-rest_of_ORF("ATGAGATAGG")
-
-
 
 def find_all_ORFs_oneframe(dna):
     """ Finds all non-nested open reading frames in the given DNA
@@ -121,7 +111,6 @@ def find_all_ORFs_oneframe(dna):
         else:
             thrice = thrice + 3
     return orflist
-find_all_ORFs_oneframe("ATGCATGAATGTAGATAGATGTGCCC")
 
 def find_all_ORFs(dna):
     """ Finds all non-nested open reading frames in the given DNA sequence in
@@ -141,12 +130,8 @@ def find_all_ORFs(dna):
     shiftsingle = dna[1:dnalength]
     shiftdouble = dna[2:dnalength]
 
-    all_orf.append(find_all_ORFs_oneframe(dna) + find_all_ORFs_oneframe(shiftsingle) + find_all_ORFs_oneframe(shiftdouble))
-    return all_orf[0]
-find_all_ORFs("ATGCATGAATGTAG")
-
-
-
+    all_orf = find_all_ORFs_oneframe(dna) + find_all_ORFs_oneframe(shiftsingle) + find_all_ORFs_oneframe(shiftdouble)
+    return all_orf
 
 def find_all_ORFs_both_strands(dna):  #Only Function out of order :()
     """ Finds all non-nested open reading frames in the given DNA sequence on both
@@ -157,17 +142,16 @@ def find_all_ORFs_both_strands(dna):  #Only Function out of order :()
     >>> find_all_ORFs_both_strands("ATGCGAATGTAGCATCAAA")
     ['ATGCGAATG', 'ATGCTACATTCGCAT']
     """
+    #Create a list to hold all ORF strands
     all_orf = []
-    dnalength2 = len(dna)
     reverse = get_reverse_complement(dna)
-    revshiftsingle = reverse[1:dnalength2]
-    revshiftdouble = reverse[2:dnalength2]
-    shiftsingle = dna[1:dnalength2]
-    shiftdouble = dna[2:dnalength2]
+    revshiftsingle = reverse[1:len(dna)]
+    revshiftdouble = reverse[2:len(dna)]
+    shiftsingle = dna[1:len(dna)]
+    shiftdouble = dna[2:len(dna)]
 
-    all_orf.append(find_all_ORFs_oneframe(dna) + find_all_ORFs_oneframe(shiftsingle) + find_all_ORFs_oneframe(shiftdouble) + find_all_ORFs_oneframe(reverse) + find_all_ORFs_oneframe(revshiftsingle) + find_all_ORFs_oneframe(revshiftdouble))
-    return all_orf[0]
-find_all_ORFs_both_strands("ATGCGAATGTAGCATCAAA")
+    all_orf = find_all_ORFs_oneframe(dna) + find_all_ORFs_oneframe(shiftsingle) + find_all_ORFs_oneframe(shiftdouble) + find_all_ORFs_oneframe(reverse) + find_all_ORFs_oneframe(revshiftsingle) + find_all_ORFs_oneframe(revshiftdouble)
+    return all_orf
 
 def longest_ORF(dna):
     """ Finds the longest ORF on both strands of the specified DNA and returns it
@@ -175,9 +159,22 @@ def longest_ORF(dna):
     >>> longest_ORF("ATGCGAATGTAGCATCAAA")
     'ATGCTACATTCGCAT'
     """
-    # TODO: implement this
-    pass
+    all_orf = find_all_ORFs_both_strands(dna)
+    return max(all_orf)
 
+def load_seq(fasta_file):
+    """ Reads a FASTA file and returns the DNA sequence as a string.
+
+    fasta_file: the path to the FASTA file containing the DNA sequence
+    returns: the DNA sequence as a string
+    """
+    retval = ""
+    f = open(fasta_file)
+    lines = f.readlines()
+    for l in lines[1:]:
+        retval += l[0:-1]
+    f.close()
+    return retval
 
 def longest_ORF_noncoding(dna, num_trials):
     """ Computes the maximum length of the longest ORF over num_trials shuffles
@@ -186,9 +183,11 @@ def longest_ORF_noncoding(dna, num_trials):
         dna: a DNA sequence
         num_trials: the number of random shuffles
         returns: the maximum length longest ORF """
-    # TODO: implement this
-    pass
-
+    for trial in range(num_trials):
+        shuffled = shuffle_string(dna)
+        all_orf = find_all_ORFs_both_strands(shuffled)
+    longest = max(all_orf)
+    return len(longest)
 
 def coding_strand_to_AA(dna):
     """ Computes the Protein encoded by a sequence of DNA.  This function
@@ -204,8 +203,14 @@ def coding_strand_to_AA(dna):
         >>> coding_strand_to_AA("ATGCCCGCTTT")
         'MPA'
     """
-    # TODO: implement this
-
+    Strand = ''
+    n = 0
+    while n < len(dna) - 2: #Repeat until end of Strand(dna), cuts off extra letters
+        codon = dna[n:n+3] #Breakdown strand into 3's
+        amino_acids = aa_table[codon]
+        Strand = Strand + amino_acids
+        n = n + 3 #Move forward 3
+    return Strand
 
 
 def gene_finder(dna):
@@ -214,9 +219,18 @@ def gene_finder(dna):
         dna: a DNA sequence
         returns: a list of all amino acid sequences coded by the sequence dna.
     """
-    # TODO: implement this
-    pass
+    threshold = longest_ORF_noncoding(dna, 1500)
+    both_ORF = find_all_ORFs_both_strands(dna)
+    beat = []
+    for orf in both_ORF:
+        if len(orf) > threshold:
+            aminos = coding_strand_to_AA(orf)
+            beat.append(aminos)
+    return beat
+    
+dna = load_seq("./data/X73525.fa")
+gene_finder(dna)
 
 if __name__ == "__main__":
     import doctest
-    doctest.run_docstring_examples(find_all_ORFs_both_strands, globals(), verbose= True)
+    doctest.run_docstring_examples(coding_strand_to_AA, globals(), verbose=True)
